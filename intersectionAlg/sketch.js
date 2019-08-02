@@ -2,43 +2,61 @@
 let canvasWidth = 800;
 let canvasHeight = 800;
 let roadWidth = 100;
-
-  function setup() {
-        createCanvas(canvasWidth, canvasHeight);
-        frameRate(30);
-    }
+let maxCars = 20;
 
 let cars = [];  // list of cars
 let numCars = 0;
 
+function setup() {
+    createCanvas(canvasWidth, canvasHeight);
+    frameRate(30);
+}
+
 function draw() {
-    background(0, 0, 0);
-    rect(10,10,10,10);
+    background(0, 0, 0);            // map bg
+    
+    let trafficLights = [];
+    
+    let tLight0 = new trafficLight(500, 500, "green"); trafficLights.push(tLight0);
+    let tLight1 = new trafficLight(500, 270, "red"); trafficLights.push(tLight1);
+    let tLight2 = new trafficLight(270, 270, "green"); trafficLights.push(tLight2);
+    let tLight3 = new trafficLight(270, 500, "red"); trafficLights.push(tLight3);
+    
+    trafficLights[0].show();     // bottom
+    trafficLights[1].show();     // right
+    trafficLights[2].show();     // top    
+    trafficLights[3].show();     // left
+
+    if (frameCount % 90 == 0) {     // if 3 seconds passed
+        for (var i = 0; i < 4; i++) {
+            trafficLights[i].changeColor();
+            trafficLights[i].show();
+        }
+        console.log("we in here");
+    }
+    
+    // rect(10,10,10,10);
     vertRoad(canvasWidth/2 - roadWidth/2, 0);
     horRoad(0, canvasWidth/2 - roadWidth/2)
     
-
-    if ((frameCount % 30  == 0) && numCars < 30) {
+    if (numCars < maxCars) {
         cars.push(spawnCar());
-        numCars += 1;
-        console.log(cars.length);
-        for (var i = 0; i < cars.length; i++) {
-            console.log("car: " + i);
-            console.log("color: " + cars[i].color);
-            console.log("x: " + cars[i].x);
-            console.log("y: " + cars[i].y);
-            console.log("track: " + cars[i].trackNum);
-        }
-    } 
+        numCars +=1 ;
+    }
     
     // if (frameCount % 10 == 0) {
         for (var i = 0; i < cars.length; i++) {
-            cars[i].move;
-            cars[i].show;
-            console.log("we moving");
+            cars[i].move();
+            cars[i].show();
         }
-    // }
-    // addCar();
+
+        for (var i = 0; i < cars.length; i++) {
+            if (cars[i].shouldDelete()) {
+                cars.splice(i, 1);  // removes that car from the array?
+                numCars -= 1;
+            }
+        }
+
     
 }
 
@@ -52,7 +70,6 @@ function vertRoad(x, y) {
     stroke('yellow');
     strokeWeight(2);
     line(canvasWidth/2, 0, canvasWidth/2, canvasHeight);
-
 }
 
 function horRoad(x, y) {
@@ -61,13 +78,10 @@ function horRoad(x, y) {
     strokeWeight(2);
     rect(x, y, canvasWidth, 100);
 
-
     // adding the line in the middle of the road
     stroke('yellow');
     strokeWeight(2);
     line(0, canvasHeight/2, canvasWidth, canvasHeight/2);
-
-
 }
 
 // dots represent cars
@@ -119,17 +133,31 @@ class Car {
     
     // param: track number (0, 1, 2, 3)
     move() {
+        if (this.x > canvasWidth || this.x < 0) {
+            // do nothing
+            return;
+        }
+        if (this.y > canvasHeight || this.y < 0) {
+            // do nothing
+            return;
+        }
+        
         if (this.trackNum == 0) {
             this.y -= 10;
         } else if (this.trackNum == 1) {
-            this.x += 10;
+            this.x -= 10;
         } else if (this.trackNum == 2) {
             this.y += 10;
         } else if  (this.trackNum == 3){
-            this.x -= 10;
+            this.x += 10;
         }
-        
+
+        // if ()
+
+
+        // making cars stop at traffic lights
     }
+
     show () {
         fill(this.color);
         rect(this.x, this.y, 10, 10);
@@ -146,5 +174,46 @@ class Car {
     get yPos() {
         return this.y;
     }
-    
+
+    shouldDelete() {
+        if (this.x > canvasWidth || this.x < 0) {
+            // do nothing
+            // console.log("should del");
+            return true;
+        }
+        if (this.y > canvasHeight || this.y < 0) {
+            // do nothing
+            // console.log("should del");
+            return true;
+        }
+        // console.log("DON'T del");
+        return false;
+    }
 };
+
+class trafficLight {
+    constructor(x, y, color) {
+        this.currentLight = color;
+        this.xPos = x;
+        this.yPos = y;
+    }
+
+    show() {
+        fill(this.currentLight);
+        stroke("white");
+        rect(this.xPos, this.yPos, 30, 30);
+    }
+
+    changeColor() {
+        if (this.currentLight == "red") this.currentLight = "green";
+        else this.currentLight = "red";
+    }
+}
+
+
+
+// each car will have a light to look at
+// if that light is red, they stop
+// if that light is green, they go
+
+
